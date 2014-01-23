@@ -81,6 +81,7 @@ abstract class AbstractConnection implements ConnectionInterface {
      * Send a request directly
      * @param string $method
      * @param array $params
+	 * @return Request
      */
     public function sendRequest($method, $params=null) {
         $request = new Request($method, $params);

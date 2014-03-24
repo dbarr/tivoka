@@ -146,7 +146,6 @@ class Request
               $this->errorData    = (isset($error['error']['data'])) ? $error['error']['data'] : null;
             } else {
               $this->errorMessage = $this->error = $error['error'];
-							foo
             }
             return;
         }

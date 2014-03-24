@@ -132,6 +132,7 @@ class Tcp extends AbstractConnection {
             throw new Exception\Exception('Invalid data type to be sent to server');
         }
 
+        //echo($request->getRequest($this->spec));
         // sending request
         fwrite($this->socket, $request->getRequest($this->spec));
         fwrite($this->socket, "\n");

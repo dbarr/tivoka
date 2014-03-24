@@ -140,9 +140,14 @@ class Request
     public function interpretResponse($json_struct) {
         //server error?
         if(($error = self::interpretError($this->spec, $json_struct, $this->id)) !== FALSE) {
-            $this->error        = $error['error']['code'];
-            $this->errorMessage = $error['error']['message'];
-            $this->errorData    = (isset($error['error']['data'])) ? $error['error']['data'] : null;
+            if (is_array($error['error'])) {
+              $this->error        = $error['error']['code'];
+              $this->errorMessage = $error['error']['message'];
+              $this->errorData    = (isset($error['error']['data'])) ? $error['error']['data'] : null;
+            } else {
+              $this->errorMessage = $this->error = $error['error'];
+							foo
+            }
             return;
         }
 
@@ -209,13 +214,28 @@ class Request
     {
         switch($spec) {
             case Tivoka::SPEC_2_0:
+              /*
                 if(isset($assoc['jsonrpc'], $assoc['error']) == FALSE) return FALSE;
+
                 if($assoc['id'] != $id && $assoc['id'] != null && isset($assoc['id']) OR $assoc['jsonrpc'] != '2.0') return FALSE;
                 if(isset($assoc['error']['message'], $assoc['error']['code']) === FALSE) return FALSE;
                 return array(
                         'id' => $assoc['id'],
                         'error' => $assoc['error']
                 );
+               */
+
+              // modification for golang
+              if(isset($assoc['error']) == FALSE) return FALSE;
+
+              if($assoc['id'] != $id && $assoc['id'] != null && isset($assoc['id'])) return FALSE;
+              if($assoc['error'] == null) return FALSE;
+
+              return array(
+                'id' => $assoc['id'],
+                'error' => $assoc['error']
+              );
+
             case Tivoka::SPEC_1_0:
                 if(isset($assoc['error'], $assoc['id']) === FALSE) return FALSE;
                 if($assoc['id'] != $id && $assoc['id'] !== null) return FALSE;

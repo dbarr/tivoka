@@ -65,8 +65,9 @@ class MethodWrapper
      */
     public function exist($method)
     {
-        if(!is_array($this->methods))return FALSE;
-        if(is_callable($this->methods[$method]))return TRUE;
+		if(!is_array($this->methods))return FALSE;
+		if(!isset($this->methods[$method]))return FALSE;
+		if(is_callable($this->methods[$method]))return TRUE;
     }
 
     /**
@@ -75,7 +76,7 @@ class MethodWrapper
     public function __call($method,$args)
     {
         if(!$this->exist($method)){
-            $args[0]->error(-32601); return;
+            throw new Exception\ProcedureException("This method is not found");
         }
         $prc = $args[0];
         return call_user_func_array($this->methods[$method],array($prc));

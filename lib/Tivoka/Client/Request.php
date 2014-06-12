@@ -45,7 +45,7 @@ class Request
     public $params;
     public $request;
     public $response;
-    
+
     public $result;
     public $error;
     public $errorMessage;
@@ -65,16 +65,16 @@ class Request
         $this->method = $method;
         $this->params = $params;
     }
-    
+
     /**
-     * Get the raw, JSON-encoded request 
+     * Get the raw, JSON-encoded request
      * @param int $spec
      */
     public function getRequest($spec) {
         $this->spec = $spec;
         return $this->request = json_encode(self::prepareRequest($spec, $this->id, $this->method, $this->params));
     }
-    
+
     /**
      * Send this request to a remote server directly
      * @param mixed $target Remote end-point definition
@@ -113,16 +113,16 @@ class Request
         if(trim($response) == '') {
             throw new Exception\ConnectionException('No response received');
         }
-    
+
         //decode
         $resparr = json_decode($response,true);
         if($resparr == NULL) {
             throw new Exception\SyntaxException('Invalid response encoding');
         }
-        
+
         $this->interpretResponse($resparr);
     }
-    
+
     /**
      * Save and parse the HTTP headers
      * @param array $raw_headers array of string coming from $http_response_header magic var
@@ -140,22 +140,26 @@ class Request
     public function interpretResponse($json_struct) {
         //server error?
         if(($error = self::interpretError($this->spec, $json_struct, $this->id)) !== FALSE) {
-            $this->error        = $error['error']['code'];
-            $this->errorMessage = $error['error']['message'];
-            $this->errorData    = (isset($error['error']['data'])) ? $error['error']['data'] : null;
+            if (is_array($error['error'])) {
+              $this->error        = $error['error']['code'];
+              $this->errorMessage = $error['error']['message'];
+              $this->errorData    = (isset($error['error']['data'])) ? $error['error']['data'] : null;
+            } else {
+              $this->errorMessage = $this->error = $error['error'];
+            }
             return;
         }
-    
+
         //valid result?
         if(($result = self::interpretResult($this->spec, $json_struct, $this->id)) !== FALSE)
         {
             $this->result = $result['result'];
             return;
         }
-    
+
         throw new Exception\SyntaxException('Invalid response structure');
     }
-    
+
     /**
      * Determines whether an error occured
      * @return bool
@@ -164,7 +168,7 @@ class Request
     {
         return ($this->error != NULL);
     }
-    
+
     /**
      * Checks whether the given response is a valid result
      * @param array $assoc The parsed JSON-RPC response as an associative array
@@ -175,9 +179,16 @@ class Request
     {
         switch($spec) {
             case Tivoka::SPEC_2_0:
-                if(isset($assoc['jsonrpc'], $assoc['id']) === FALSE || 
+              /*
+               // original JSON rpc 2.0 spec
+                if(isset($assoc['jsonrpc'], $assoc['id']) === FALSE ||
                    !array_key_exists('result', $assoc)) return FALSE;
                 if($assoc['id'] !== $id || $assoc['jsonrpc'] != '2.0') return FALSE;
+               */
+
+              // For Golang skip the 'jsonrpc' field
+                if(isset($assoc['id']) === FALSE ||
+                   !array_key_exists('result', $assoc)) return FALSE;
                 return array(
                         'id' => $assoc['id'],
                         'result' => $assoc['result']
@@ -191,7 +202,7 @@ class Request
                 );
         }
     }
-    
+
     /**
      * Checks whether the given response is valid and an error
      * @param array $assoc The parsed JSON-RPC response as an associative array
@@ -202,13 +213,28 @@ class Request
     {
         switch($spec) {
             case Tivoka::SPEC_2_0:
+              /*
                 if(isset($assoc['jsonrpc'], $assoc['error']) == FALSE) return FALSE;
+
                 if($assoc['id'] != $id && $assoc['id'] != null && isset($assoc['id']) OR $assoc['jsonrpc'] != '2.0') return FALSE;
                 if(isset($assoc['error']['message'], $assoc['error']['code']) === FALSE) return FALSE;
                 return array(
                         'id' => $assoc['id'],
                         'error' => $assoc['error']
                 );
+               */
+
+              // modification for golang
+              if(isset($assoc['error']) == FALSE) return FALSE;
+
+              if($assoc['id'] != $id && $assoc['id'] != null && isset($assoc['id'])) return FALSE;
+              if($assoc['error'] == null) return FALSE;
+
+              return array(
+                'id' => $assoc['id'],
+                'error' => $assoc['error']
+              );
+
             case Tivoka::SPEC_1_0:
                 if(isset($assoc['error'], $assoc['id']) === FALSE) return FALSE;
                 if($assoc['id'] != $id && $assoc['id'] !== null) return FALSE;
@@ -219,7 +245,7 @@ class Request
                 );
         }
     }
-    
+
     /**
      * Encodes the request properties
      * @param mixed $id The id of the request
@@ -249,7 +275,7 @@ class Request
             return $request;
         }
     }
-    
+
     /**
     * @return string A v4 uuid
     */

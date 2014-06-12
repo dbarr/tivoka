@@ -117,7 +117,7 @@ class Request
         //decode
         $resparr = json_decode($response,true);
         if($resparr == NULL) {
-            throw new Exception\SyntaxException('Invalid response encoding');
+            throw new Exception\SyntaxException("Invalid response encoding\n--------------------------------\n" . var_export($response, true) . "\n--------------------------------\n");
         }
 
         $this->interpretResponse($resparr);

@@ -114,7 +114,8 @@ class Server
         if($this->hide_errors) error_reporting(0);// prevents messing up the response
         
         $this->input = file_get_contents('php://input');
-        
+		if (!$this->input) $this->input=getParam('json');
+
         $json_errors = array(
             JSON_ERROR_NONE => '',
             JSON_ERROR_DEPTH => 'The maximum stack depth has been exceeded',

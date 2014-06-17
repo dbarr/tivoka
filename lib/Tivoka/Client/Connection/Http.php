@@ -42,6 +42,7 @@ class Http extends AbstractConnection {
 
     public $target;
     public $headers = array();
+    public $context;
 
     /**
      * Constructs connection
@@ -75,6 +76,19 @@ class Http extends AbstractConnection {
     }
 
     /**
+     * Sets the stream context to use for upcoming send requests
+     * @param resource a stream context resource returned by stream_context_create()
+     * @return Http Self instance
+     */
+    public function setContext($context) {
+        if ($context !== null && get_resource_type($context) != 'stream-context')
+            throw new Exception\Exception('Parameter is not a stream context');
+
+        $this->context = $context;
+        return $this;
+    }
+
+    /**
      * Sends a JSON-RPC request
      * @param Request $request A Tivoka request
      * @return Request if sent as a batch request the BatchRequest object will be returned
@@ -88,7 +102,7 @@ class Http extends AbstractConnection {
         if(!($request instanceof Request)) throw new Exception\Exception('Invalid data type to be sent to server');
         
         // preparing connection...
-        $context = array(
+        $contextopts = array(
                 'http' => array(
                     'content' => $request->getRequest($this->spec),
                     'header' => "Content-Type: application/json\r\n".
@@ -98,10 +112,15 @@ class Http extends AbstractConnection {
                 )
         );
         foreach($this->headers as $label => $value) {
-          $context['http']['header'] .= $label . ": " . $value . "\r\n";
+          $contextopts['http']['header'] .= $label . ": " . $value . "\r\n";
         }
+
+        $context = $this->context ?: stream_context_create();
+
+        stream_context_set_option($context, $contextopts);
+
         //sending...
-        $response = @file_get_contents($this->target, false, stream_context_create($context));
+        $response = @file_get_contents($this->target, false, $context);
         if($response === FALSE) {
             throw new Exception\ConnectionException('Connection to "'.$this->target.'" failed');
         }

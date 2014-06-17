@@ -58,6 +58,21 @@ $connection->setHeader('User-Agent', 'Tivoka/3.x');
 ?>
 ```
 
+HTTP also allows you to specify the stream context, with some exceptions for `http`: `content`, `header`, `method`, and `timeout` cannot be set as they will be overwritten in the request.
+```php
+<?php
+$connection->setContext(stream_context_create([
+    'http' => [
+        'user_agent' => 'Tivoka JSONRPC',
+    ],
+    'ssl' => [
+        'local_cert' => './mycert.pem',
+        'passphrase' => 'password1234',
+    ],
+]));
+?>
+```
+
 ## Sending a request
 
 Now, we have a connection, we also need a request to send. Let's assume, the server on the other end of the connection implements a method called `distance`, which calculates the distance between two cities.

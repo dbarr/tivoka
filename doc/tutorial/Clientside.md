@@ -20,6 +20,13 @@ $connection = Tivoka\Client::connect($target);
 ?>
 ```
 
+### WebSocket Connections
+If the URL happens to be a WebSocket URL (starting with ws or wss), a (persistant) WebSocket connection is made:
+```php
+$target = 'ws://example.com/api/json-rpc';
+```
+Note: This requires the dependencies from composer.json to be installed.
+
 ### TCP Connections
 In order to connect to a pure TCP JSON-RPC server, use this:
 ```php
@@ -48,6 +55,21 @@ In addition to that HTTP connections allow you to set the request header.
 ```php
 <?php
 $connection->setHeader('User-Agent', 'Tivoka/3.x');
+?>
+```
+
+HTTP also allows you to specify the stream context, with some exceptions for `http`: `content`, `header`, `method`, and `timeout` cannot be set as they will be overwritten in the request.
+```php
+<?php
+$connection->setContext(stream_context_create([
+    'http' => [
+        'user_agent' => 'Tivoka JSONRPC',
+    ],
+    'ssl' => [
+        'local_cert' => './mycert.pem',
+        'passphrase' => 'password1234',
+    ],
+]));
 ?>
 ```
 

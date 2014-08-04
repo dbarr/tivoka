@@ -46,6 +46,13 @@ class Server
     public $host;
     
     /**
+    * @var object The object given to __construct()
+    * @see Tivoka\Server\Server::__construct()
+    * @access private
+    */
+    public $eventobject;
+
+    /**
      * @var array The parsed json input as an associative array
      * @access private
      */
@@ -98,6 +105,15 @@ class Server
         return $this;
     }
     
+    public function setEventObject($eventobject) {
+        $this->eventobject = $eventobject;
+    }
+
+    public function trigger() {
+        if ($this->eventobject)
+            call_user_func_array([$this->eventobject, 'trigger'], func_get_args());
+    }
+
     /**
      * If invoked, the server will try to hide all PHP errors, to prevent them from obfuscating the output.
      */
@@ -114,7 +130,6 @@ class Server
         if($this->hide_errors) error_reporting(0);// prevents messing up the response
         
         $this->input = file_get_contents('php://input');
-		if (!$this->input) $this->input=getParam('json');
 
         $json_errors = array(
             JSON_ERROR_NONE => '',
@@ -196,7 +211,9 @@ class Server
         
         //invoke...
         try {
-            return $result( $this->host->{$request['method']}($params) );
+            $this->trigger('preprocess', $request['method'], $params);
+            $ret = $result( $this->host->{$request['method']}($params) );
+            $this->trigger('postprocess', $request['method'], $params, $ret);
         }catch(\Tivoka\Exception\ProcedureException $e) {
             if($e instanceof \Tivoka\Exception\InvalidParamsException)
                 return $error(-32602, ($e->getMessage() != "") ? $e->getMessage() : 'Invalid parameters');

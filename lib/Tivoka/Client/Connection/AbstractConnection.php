@@ -120,6 +120,8 @@ abstract class AbstractConnection implements ConnectionInterface {
         } elseif (is_string($target) && preg_match('/^wss?:\/\//', $target)) {
             // WebSocket URL starts with ws:// or wss://
             return new WebSocket($target);
+        } else if (function_exists('curl_init')) {
+            return new Curl($target);
         } else {
             // HTTP end-point should be defined just as string
             return new Http($target);

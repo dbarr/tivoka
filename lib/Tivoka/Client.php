@@ -41,7 +41,7 @@ use Tivoka\Exception\Exception;
  * The public interface to all tivoka functions
  * @package Tivoka
  */
-abstract class Client
+class Client
 {
     
     /**

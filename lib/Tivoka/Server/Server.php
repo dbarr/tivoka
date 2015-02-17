@@ -214,10 +214,10 @@ class Server
             $this->trigger('preprocess', $request['method'], $params);
             $ret = $result( $this->host->{$request['method']}($params) );
             $this->trigger('postprocess', $request['method'], $params, $ret);
-        }catch(\Tivoka\Exception\ProcedureException $e) {
+        }catch(\Exception $e) {
             if($e instanceof \Tivoka\Exception\InvalidParamsException)
                 return $error(-32602, ($e->getMessage() != "") ? $e->getMessage() : 'Invalid parameters');
-            return $error(-32603, ($e->getMessage() != "") ? $e->getMessage() : 'Internal error invoking method');
+            return $error(-32603, ($e->getMessage() != "") ? $e->getMessage() : 'Internal error invoking method', ['exceptionClass' => get_class($e)]);
         }
     }
     

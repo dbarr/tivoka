@@ -212,7 +212,7 @@ class Server
         //invoke...
         try {
             $this->trigger('preprocess', $request['method'], $params);
-            $ret = $result( $this->host->{$request['method']}($params) );
+            $ret = $result( call_user_func_array([$this->host, $request['method']], $params) );
             $this->trigger('postprocess', $request['method'], $params, $ret);
         }catch(\Exception $e) {
             if($e instanceof \Tivoka\Exception\InvalidParamsException)

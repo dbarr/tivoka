@@ -120,7 +120,7 @@ class Http extends AbstractConnection {
         stream_context_set_option($context, $contextopts);
 
         //sending...
-        $response = @file_get_contents($this->target, false, $context);
+        $response = file_get_contents($this->target, false, $context);
         if($response === FALSE) {
             throw new Exception\ConnectionException('Connection to "'.$this->target.'" failed');
         }
